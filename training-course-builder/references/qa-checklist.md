@@ -42,6 +42,9 @@ and Info (polish/improvement suggestions).
 - [ ] Complete files contain ALL the code the skeleton is missing (no partial completions)
 - [ ] Skeleton files have clear TODO markers or gaps where students merge code
 - [ ] The diff between skeleton and complete is clean (no unrelated differences)
+- [ ] Skeleton files are syntactically valid Python (can parse without SyntaxError)
+- [ ] No "run this file" step appears between a "view skeleton" step and its merge step
+- [ ] Steps explicitly note when a file is incomplete ("we'll merge in the working code next")
 
 ### Code Quality
 - [ ] All Python files have proper docstrings explaining what they do
@@ -100,7 +103,50 @@ and Info (polish/improvement suggestions).
 - [ ] Speaker notes are present and useful
 - [ ] No orphaned slides (slides without corresponding lab content, unless intentionally conceptual)
 
-## 5. Cross-Cutting Concerns
+### Animations
+- [ ] Animated slides reveal content in a logical order (title first, then points sequentially)
+- [ ] No slide has more than 20 click effects (hard to deliver smoothly beyond this)
+- [ ] All animation targets reference shapes that still exist (no orphaned targets from deleted shapes)
+- [ ] Animation usage is consistent within each section (not some slides animated, others static)
+- [ ] No "After Previous" timer chains that could cascade if timing is off
+
+### Slide Master Integrity
+- [ ] All content slides use the same slide master (no mismatched backgrounds/themes)
+- [ ] New slides (if any) were created via duplicate-and-edit, NOT python-pptx slide creation
+- [ ] Background images are preserved on all slides (check for missing branded backgrounds)
+- [ ] Year/date references in slide masters and footers are current
+
+## 5. Content Flow & Learning Progression
+
+### Prerequisite Ordering
+- [ ] No concept is used or referenced before it's been introduced
+- [ ] Slide content explaining a concept appears BEFORE the lab that exercises it
+- [ ] Labs don't assume knowledge from a later section
+- [ ] "See Lab N" forward references actually point to existing labs
+
+### Pacing & Balance
+- [ ] No single lab is dramatically longer than others without good reason
+- [ ] No slides are too dense (10+ bullet points, walls of text) — split if needed
+- [ ] No slides are too sparse (near-empty slides that could be merged)
+- [ ] Timing estimates are present and reasonable for each lab
+
+### Transitions & Flow
+- [ ] Logical bridges exist between sections (not abrupt topic jumps)
+- [ ] Transition/summary slides appear at major topic boundaries
+- [ ] Each lab's purpose statement logically follows from the previous lab's conclusion
+
+### Redundancy
+- [ ] Same concept isn't explained in detail in multiple places without adding value
+- [ ] No near-duplicate slides that could be consolidated
+- [ ] Repeated terminology is consistent (not explained differently each time)
+
+## 6. Topic Coverage & Currency
+
+### Topic Gap Analysis
+- [ ] All core concepts expected for this course type are covered
+- [ ] No significant recent developments in the field are missing
+- [ ] Emerging topics are at least mentioned even if not deeply covered
+- [ ] Obsolete or declining topics are flagged or removed
 
 ### Version Currency
 - [ ] All library versions in requirements.txt are reasonably current
@@ -108,6 +154,12 @@ and Info (polish/improvement suggestions).
 - [ ] Model names reference currently available models
 - [ ] External tool versions (Ollama, Docker, VS Code) are current
 - [ ] Documentation links point to current versions
+
+### Date & Version Currency
+- [ ] Copyright years are current in labs.md footer, README.md, and slide footers
+- [ ] Title slide version date is current
+- [ ] labs.md revision header is current
+- [ ] Historical/factual years are NOT incorrectly updated (e.g., "Transformers introduced in 2017" left alone)
 
 ### Consistency
 - [ ] File naming is consistent throughout (no mixed conventions)
@@ -120,6 +172,29 @@ and Info (polish/improvement suggestions).
 - [ ] Every lab references the prerequisite knowledge/setup
 - [ ] No dead-end labs (labs that set up something never used again)
 - [ ] The progression from Lab 1 to Lab N tells a coherent story
+
+## 7. Lab Execution Verification
+
+Run the Lab Verification Pass (see SKILL.md) to catch structural issues:
+
+### Command Mapping
+- [ ] Every command in labs.md extracted and mapped to its lab/step number
+- [ ] Every `code -d` merge command identified
+- [ ] Every `python` / run command cross-referenced with its prerequisite merge step
+- [ ] Every `cd` command leaves students in the correct directory for subsequent commands
+
+### Multi-Process Labs
+- [ ] Labs requiring servers explicitly tell students to open a new terminal
+- [ ] Terminal identity is labeled ("In Terminal 1 (server):", "In Terminal 2 (client):")
+- [ ] Server startup includes a confirmation step (expected output)
+- [ ] Server cleanup/stop steps included at end of lab or before next lab
+- [ ] Port numbers documented for "address already in use" troubleshooting
+
+### Timing & Troubleshooting
+- [ ] Each lab has an estimated completion time
+- [ ] Slow operations (LLM queries, model downloads, pip installs) include wait time estimates
+- [ ] Common failure modes have inline troubleshooting notes
+- [ ] Benign warnings are proactively documented so students don't panic
 
 ## Reporting Format
 
