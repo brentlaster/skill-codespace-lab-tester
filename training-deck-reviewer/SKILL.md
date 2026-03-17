@@ -24,7 +24,7 @@ fixes applied.
 **CRITICAL — This review produces THREE deliverables:**
 
 1. `qa-report.md` — the written QA report (Phase 7)
-2. `<deck>_reviewed.pptx` — the modified deck with all changes applied (Phase 8)
+2. `<deck>_reviewed_<TIMESTAMP>.pptx` — the modified deck with all changes applied (Phase 8). Always use a timestamped filename to avoid cloud sync caching issues.
 3. `anticipated-qa.md` — likely audience questions and suggested answers (Phase 9)
 
 **You are NOT done until Phase 9 is complete and all three files have been saved.**
@@ -519,27 +519,75 @@ phase actually fixes the deck.
 
 > **⚠️ MANDATORY ENFORCEMENT — READ BEFORE PROCEEDING ⚠️**
 >
-> Phase 8 contains steps that are frequently skipped by mistake. The following two steps are
-> **NON-NEGOTIABLE** and must be completed before saving the final deck:
+> Phase 8 contains steps that are frequently skipped or done incorrectly. The following
+> are **NON-NEGOTIABLE** and must be completed correctly before saving the final deck:
 >
-> 1. **Step 6 — Visual Enhancement of Text-Heavy Slides**: You MUST identify text-heavy slides
->    and enhance 20-40% of them with diagrams, charts, code blocks, or images. Do NOT skip this.
->    If you reach step 7 without having done visual enhancements, STOP and go back to step 6.
+> 1. **Duplicated slide cleanup**: When using `add_slide.py`, you MUST remove ALL inherited
+>    content (icons, text, shapes, animations) from the source slide before adding new content.
+>    Failure to do this produces slides with random leftover elements from other slides.
 >
-> 2. **Step 8 — Renumber Slide References**: After inserting new slides, ALL slide numbers in
+> 2. **Visual enhancement — restructure first**: When adding visual elements to text-heavy
+>    slides, you MUST resize/reposition existing text boxes to make room FIRST. Never drop
+>    shapes on top of existing content — they WILL overlap and obscure text.
+>
+> 3. **Title slide verification**: After updating version/date, render slide 1 to an image
+>    and visually confirm the changes took effect. Text replacement can silently fail.
+>
+> 4. **Step 6 — Visual Enhancement of Text-Heavy Slides**: You MUST run a PROGRAMMATIC SCAN
+>    of ALL slides (not just Phase 1 tags) to find every slide lacking images/charts/tables.
+>    Look especially for GROUPS of related slides (tool categories, model types, etc.).
+>    Enhance 20-40% of candidates with diagrams, charts, icons, code blocks, or images.
+>    Do NOT skip this. If you reach step 7 without having done visual enhancements, STOP
+>    and go back to step 6.
+>
+> 5. **Step 7 — Visual QA with subagent**: ALL modified slides must be rendered to images and
+>    inspected by a SUBAGENT with fresh eyes. You cannot self-verify — you will see what you
+>    expect, not what's actually rendered.
+>
+> 6. **Step 8 — Renumber Slide References**: After inserting new slides, ALL slide numbers in
 >    `qa-report.md` AND `anticipated-qa.md` MUST be updated to reflect final positions in the
->    reviewed deck. Do NOT save the report with original slide numbers. If you reach step 9
->    without having renumbered, STOP and go back to step 8.
+>    reviewed deck. Do NOT save the report with original slide numbers.
 >
 > **These are not optional polish steps. They are core deliverable requirements.**
+
+> **📋 LESSONS LEARNED FROM PAST REVIEWS:**
+>
+> 1. **Visual enhancements get missed on "non-obvious" slides.** Slides that have AutoShapes
+>    with text (not plain TextBoxes) can look like they have visual elements in the Phase 1
+>    inventory but are actually just text in styled boxes. ALWAYS run a programmatic scan
+>    checking `shape.shape_type` for PICTURE/CHART/TABLE presence, not just the Phase 1 tags.
+>
+> 2. **Groups of related slides are the easiest wins.** A series of 5 slides each covering a
+>    different tool/category/concept (e.g., "Chatbot Interfaces", "Python & Programming",
+>    "IDE Integration", "APIs", "No-Code Platforms") benefits enormously from consistent icon
+>    or visual treatment across the group. Look for these patterns explicitly.
+>
+> 3. **Cloud sync services cache aggressively.** When saving the reviewed deck to a OneDrive,
+>    Google Drive, or Dropbox-synced folder, the old version may persist even after overwriting.
+>    ALWAYS use a unique timestamped filename. Never reuse or overwrite a previous output name.
+>
+> 4. **Visual enhancements stripped during fixes are NOT automatically re-added.** If you fix
+>    overlapping shapes by rebuilding from an earlier intermediate file, you LOSE all enhancements
+>    that were added after that intermediate. Always track your file lineage and verify that the
+>    final output contains ALL enhancements from ALL rounds of work.
+>
+> 5. **Removing shapes by shrinking to 1×1 EMU does NOT work.** Text inside a 1×1 shape renders
+>    as a vertical single-character column. To truly remove a shape, use
+>    `slide.shapes._spTree.remove(shape._element)`. To remove a paragraph, use
+>    `txBody.remove(para._p)` via `pptx.oxml.ns.qn('a:p')`.
 
 ### Step-by-step workflow
 
 1. **Make a working copy** of the original deck:
    ```bash
-   cp <deck>.pptx <deck>_reviewed.pptx
+   # Use a timestamped filename to avoid cloud sync caching issues (OneDrive, etc.)
+   TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+   cp <deck>.pptx <deck>_reviewed_${TIMESTAMP}.pptx
    ```
-   All modifications go into the `_reviewed` copy. Never overwrite the original.
+   All modifications go into this timestamped copy. Never overwrite the original.
+   The timestamp in the filename prevents cloud storage services (OneDrive, Google Drive,
+   Dropbox) from serving a cached version of a previous file with the same name.
+   Use this timestamped filename consistently throughout all subsequent steps.
 
 2. **Apply auto-fixes** to the deck (see Auto-Fix Policy below for the full list):
    - Fix typos and spelling errors found in Phase 2
@@ -560,6 +608,11 @@ phase actually fixes the deck.
    - Update any stale presentation-year references in body text
    - Do NOT change historical/factual year references
    - See the Year/Date Update section below for detailed technical approaches
+   - **🔴 VERIFY title slide updates**: After applying year/date changes, render slide 1
+     to an image and visually confirm the version number and date are correct. Text
+     replacement can silently fail if the text is split across multiple XML runs or if
+     whitespace doesn't match exactly. If the rendered image still shows the old version
+     or date, inspect the raw XML to find and fix the text.
 
 5. **Create a Change Summary slide** and insert it as **slide 2** (immediately after the title
    slide) so the reviewer/instructor sees it first:
@@ -597,11 +650,34 @@ phase actually fixes the deck.
    **Self-check:** Before proceeding to step 7, confirm you have enhanced at least 20% of
    text-heavy slides. If you haven't, go back and do it now.
 
-7. **Verify the modified deck**:
+7. **🔴 MANDATORY — Verify ALL modified slides visually**:
+
+   **DO NOT SKIP THIS STEP.** Every previous issue with this skill (overlapping shapes,
+   inherited icons, wrong text, broken layouts) would have been caught by visual inspection.
+   This is your last line of defense.
+
    - Re-extract text from the modified deck and confirm changes were applied
    - Check slide count matches expected (original + summary slide + new gap slides +
      visually enhanced slides + backup slides)
-   - Open a few modified slides to verify formatting wasn't broken
+   - **Render EVERY modified slide to an image** — this includes: the title slide (version/
+     date changes), the Change Summary slide (slide 2), all gap-fill slides, all visually
+     enhanced slides. Convert to PDF, then use `pdftoppm` to get individual slide images.
+   - **Use a SUBAGENT for visual inspection.** You have been staring at the XML and will see
+     what you expect, not what's actually rendered. Launch a subagent with fresh eyes to
+     inspect every modified slide image. The subagent prompt must include:
+     ```
+     Visually inspect these slides. Assume there are issues — find them.
+     For each slide, look for:
+     - Leftover content from a source slide (icons, images, text that doesn't belong)
+     - Overlapping elements (shapes placed on top of text, text through shapes)
+     - Text overflow or cut off at edges
+     - Version/date still showing old values on the title slide
+     - Empty or placeholder text
+     - Elements that look out of place or inconsistent with the deck's theme
+     Report ALL issues found, even minor ones.
+     ```
+   - **Fix every issue found** and re-render the affected slides to confirm the fix
+   - **Do NOT proceed to step 8 until all visual issues are resolved**
 
 8. **🔴 MANDATORY — Renumber slide references in the QA report and anticipated Q&A**:
 
@@ -651,6 +727,13 @@ phase actually fixes the deck.
 **🛑 STOP AND VERIFY before saving.** Before proceeding to step 9, confirm ALL of the
    following. If any answer is NO, go back and fix it:
 
+   - Did you clean ALL inherited content from every duplicated slide (Change Summary,
+     gap-fills)? No leftover icons, text, shapes, or animations from the source slide?
+   - Did you restructure existing layouts BEFORE adding visual enhancements (not just
+     drop shapes on top)?
+   - Did you render the title slide and visually confirm version/date are updated?
+   - Did a SUBAGENT visually inspect ALL modified slide images for issues?
+   - Were all issues found by the subagent fixed and re-verified?
    - Did you enhance 20-40% of text-heavy slides with visuals in step 6? (Count them.)
    - Did you renumber ALL slide references in `qa-report.md` in step 8?
    - Did you renumber ALL slide range references in `anticipated-qa.md` section headers?
@@ -659,8 +742,13 @@ phase actually fixes the deck.
 
 9. **Save the final deck** to the outputs folder:
    ```bash
-   cp <deck>_reviewed.pptx /path/to/outputs/<deck>_reviewed.pptx
+   # Use the timestamped filename from step 1 — NEVER reuse a previous filename
+   cp <deck>_reviewed_${TIMESTAMP}.pptx /path/to/outputs/<deck>_reviewed_${TIMESTAMP}.pptx
    ```
+   **🔴 IMPORTANT — Always use a NEW filename.** Do not overwrite or reuse the filename
+   of a previously saved reviewed deck. Cloud sync services (OneDrive, Google Drive, Dropbox)
+   may cache the old file and serve it instead of the new one, making it appear as though
+   your changes were lost. The timestamped filename from step 1 ensures every save is unique.
 
 ### What gets modified vs. what gets flagged
 
@@ -682,7 +770,7 @@ phase actually fixes the deck.
 
 At the end of Phase 8, you MUST have saved all three:
 - `qa-report.md` — from Phase 7
-- `<deck>_reviewed.pptx` — the modified deck with all changes applied
+- `<deck>_reviewed_<TIMESTAMP>.pptx` — the modified deck with all changes applied (timestamped filename)
 - `anticipated-qa.md` — from the Anticipated Q&A step below
 
 **If you have not saved a modified .pptx file, the review is incomplete. Go back and do it.**
@@ -952,11 +1040,42 @@ Google Slides) are particularly prone to this.
    ```
    This copies the slide XML, all relationships (including background image refs), and ensures
    the new slide uses the same slide layout and slide master as the source.
-3. **Edit the duplicated XML directly** — replace titles, body text, and shapes in the new
-   `slideN.xml` file while preserving the background image reference (typically `rId3` for the
-   full-slide background PNG) and the relationship file structure.
-4. **Insert into presentation.xml** — add a `<p:sldId>` entry at the correct position in the
+
+3. **🔴 CRITICAL — Clean up ALL inherited content from the source slide.** `add_slide.py`
+   duplicates EVERYTHING from the source — all text, images, icons, shapes, animations, and
+   relationships. You MUST remove all source-specific content before adding new content.
+   **This is the #1 source of broken slides.** Perform ALL of the following:
+
+   - **Remove all `<p:pic>` elements** (pictures/icons) that are NOT the background image.
+     The background image is typically the full-slide-size picture referencing `rId3` — keep
+     that one, delete all others.
+   - **Remove all content text boxes** — delete or clear every `<p:sp>` shape that contains
+     source slide text. Do not just overwrite the first text box and leave others behind.
+   - **Remove ALL decorative `<p:sp>` shapes** from the source (colored boxes, icon labels,
+     callout shapes, grey background rectangles, etc.).
+   - **Remove the `<p:timing>` element** if present — this carries over source slide
+     animations that will not make sense on the new slide.
+   - **Verify cleanup**: After removing inherited content, the slide should contain ONLY the
+     background image and the slide layout placeholders. Count remaining elements to confirm.
+   - **Only then add your new content** — new text boxes, shapes, and visual elements.
+
+   **Self-check after editing each duplicated slide:**
+   ```
+   □ All source slide pictures (except background) removed?
+   □ All source slide text boxes removed or fully replaced?
+   □ All source slide decorative shapes removed?
+   □ Source slide animations (<p:timing>) removed?
+   □ New content added and verified?
+   ```
+
+4. **Edit the duplicated XML directly** — add your new titles, body text, and shapes while
+   preserving the background image reference (typically `rId3` for the full-slide background
+   PNG) and the relationship file structure.
+5. **Insert into presentation.xml** — add a `<p:sldId>` entry at the correct position in the
    `<p:sldIdLst>` to control where the slide appears in the deck order.
+6. **🔴 Render the new slide to an image and visually verify** — confirm no leftover content
+   from the source slide is visible. If you see ANY inherited content (icons, text fragments,
+   decorative shapes, animations), go back to step 3 and remove it before proceeding.
 
 **Why this matters:** Many training decks (especially those converted from Google Slides) have
 multiple slide masters. Master 0 might be a generic white theme while Master 1 has the branded
@@ -1000,15 +1119,41 @@ elements to improve their instructional quality and visual appeal.
 
 ### Which slides to enhance
 
-During Phase 1 inventory, you categorized each slide. Look for slides tagged as `content`
-(bullets/text) that contain **no images, diagrams, charts, tables, or other visual elements** —
-just title text and bullet points. These are your enhancement candidates.
+> **🔴 CRITICAL — SCAN EVERY SLIDE, NOT JUST OBVIOUS ONES.**
+> Do NOT limit your scan to slides tagged `content` in the Phase 1 inventory. The Phase 1
+> categories are rough guides, not definitive. You MUST visually inspect or programmatically
+> check EVERY non-skipped slide for visual enhancement opportunities. Specifically:
+>
+> - Slides with only auto-shapes containing text (e.g., title + subtitle + bullets in
+>   AutoShape/TextBox elements) count as text-heavy even if Phase 1 didn't tag them `content`.
+> - **Groups of related slides** (e.g., a series of 5 slides each covering a different tool
+>   category, or a set of slides each describing a different model architecture) are PRIME
+>   candidates — they benefit from consistent visual treatment across the group.
+> - Look for slides where `shape.shape_type` is only TEXT_BOX, PLACEHOLDER, or AUTO_SHAPE
+>   with text — if there are no PICTURE, CHART, TABLE, or FREEFORM shapes, it's a candidate.
+> - When in doubt, include the slide in your candidate list. It's better to have too many
+>   candidates and select the best 20-40% than to miss obvious opportunities.
+
+**How to build the candidate list:**
+
+1. Run a programmatic scan of ALL slides in the deck:
+   ```python
+   for i, slide in enumerate(prs.slides):
+       has_image = any(s.shape_type == 13 for s in slide.shapes)  # PICTURE
+       has_chart = any(s.shape_type == 3 for s in slide.shapes)   # CHART
+       has_table = any(s.shape_type == 19 for s in slide.shapes)  # TABLE
+       if not has_image and not has_chart and not has_table:
+           print(f"Slide {i+1}: CANDIDATE — no images/charts/tables")
+   ```
+2. From that list, remove the skip categories below.
+3. The remaining slides are your enhancement candidates. Count them ALL.
+4. Select 20-40% for enhancement, prioritizing groups, processes, and comparisons.
 
 **Skip these even if text-heavy:**
 
 - Section header/divider slides (they're intentionally minimal)
 - Lab intro slides (structural anchors, keep as-is)
-- Slides that already have visual elements (even if also text-heavy — those are fine)
+- Slides that already have images, charts, tables, or embedded media
 - Slides with animations that build up content progressively (the animation IS the visual)
 - Post-closing slides (out of scope)
 
@@ -1148,15 +1293,28 @@ is needed.
 
 ### Layout approach
 
+> **🔴 CRITICAL — RESTRUCTURE BEFORE ADDING.** You cannot simply drop new shapes on top of an
+> existing slide and expect them not to overlap. The existing text boxes, bullets, and shapes
+> already occupy the slide area. You MUST resize/reposition existing elements FIRST to make
+> room, THEN add new visual elements into the freed space. **Never add shapes on top of
+> existing content.** This is the #1 cause of overlapping elements in enhanced slides.
+
 When adding a visual to a text-heavy slide, restructure the slide layout:
 
-- **Split layout**: Text/bullets on the left (~55% width), visual on the right (~45% width).
-  This works well for most enhancement types.
-- **Top-bottom layout**: Brief text at top, full-width visual below. Better for wide diagrams
-  or flowcharts.
-- **Reduced bullets + visual**: If the slide has 8+ bullets, consider condensing to the 4-5
-  most essential points and giving the freed space to the visual. The removed detail can go
-  into speaker notes.
+- **Split layout**: Resize existing text/bullets to occupy ~55% width on the left, THEN add
+  visual on the right (~45% width). You must actually modify the existing text box widths
+  and positions in the XML — don't just add shapes and hope they don't overlap.
+- **Top-bottom layout**: Resize existing text to occupy the top portion, THEN add full-width
+  visual below. Reduce the text box height to make room.
+- **Reduced bullets + visual**: If the slide has 8+ bullets, REMOVE 3-4 bullets from the XML
+  (move to speaker notes), resize the text box smaller, THEN add the visual in the freed space.
+
+**Mandatory workflow for each enhanced slide:**
+1. Read the existing slide XML and note all shape positions and sizes (x, y, cx, cy in EMUs)
+2. Plan the new layout — decide where each existing element moves and where the visual goes
+3. Modify existing shape positions/sizes in the XML to make room
+4. Add new visual shapes in the freed space
+5. Render to image and verify NO overlapping elements
 
 The visual should fill its allocated space fully — avoid tiny diagrams floating in a sea of
 whitespace. Aim for the visual to occupy at least 35-45% of the usable slide area.
@@ -1201,10 +1359,15 @@ Don't try to enhance every single text-heavy slide — that would be excessive a
 overwhelm the deck with inconsistent visuals. Aim to enhance the slides where a visual
 would have the **most instructional impact**:
 
+- **Prioritize groups of related slides** (e.g., a series of slides each covering a tool,
+  model type, or category). These are the highest-value targets because consistent visual
+  treatment across the group dramatically improves the deck's professional appearance.
 - Prioritize slides that explain processes, architectures, or comparisons (these benefit most)
 - Prioritize slides early in each section (sets a visual tone for the section)
 - Skip slides where the text is already well-organized and clear on its own
 - A good target is **enhancing 20-40% of text-heavy slides**, favoring quality over quantity
+- **Remember:** the candidate count must come from a PROGRAMMATIC SCAN of all slides (see
+  "Which slides to enhance" above), not just the Phase 1 inventory tags
 
 ---
 
@@ -1232,7 +1395,7 @@ historically the most frequently skipped — pay extra attention to them.
 ### Core Deliverables
 
 - [ ] `qa-report.md` has been saved to the outputs folder
-- [ ] `<deck>_reviewed.pptx` has been saved to the outputs folder (modified deck with fixes applied)
+- [ ] `<deck>_reviewed_<TIMESTAMP>.pptx` has been saved to the outputs folder with a UNIQUE timestamped filename (never reuse a previous filename)
 - [ ] `anticipated-qa.md` has been generated with 25-40 questions covering all major sections
 
 ### Deck Modifications
@@ -1240,18 +1403,30 @@ historically the most frequently skipped — pay extra attention to them.
 - [ ] All auto-fix changes (typos, formatting, years) have been applied to the .pptx file
 - [ ] New slides have been created for each technology gap identified in Phase 5
 - [ ] New slides use the CORRECT slide master (verified via duplicate-and-edit workflow)
+- [ ] 🔴 New slides have ALL inherited source content removed (icons, text, shapes, animations)
 - [ ] New slides include visual design elements (cards, boxes, diagrams), not just text
 - [ ] New slides use full slide width (no large empty areas on one side)
 - [ ] A Change Summary slide has been inserted as slide 2 listing all modifications
 - [ ] Every modified slide has a speaker note documenting the change
 - [ ] Every modified slide has a backup copy appended at the end of the deck
 - [ ] Stale year references in footers/title slide have been updated to the current year
+- [ ] 🔴 Title slide rendered to image and version/date visually confirmed correct
 - [ ] The modified deck has been verified (text re-extracted, slide count confirmed)
+
+### 🔴 Post-Modification Visual QA (frequently skipped — verify carefully)
+
+- [ ] 🔴 EVERY modified slide (title, Change Summary, gap-fills, enhanced slides) has been rendered to an image
+- [ ] 🔴 A SUBAGENT with fresh eyes has inspected all rendered modified-slide images for issues
+- [ ] 🔴 No overlapping elements found (shapes on top of text, text through shapes)
+- [ ] 🔴 No inherited source-slide content found on any duplicated slide (icons, text, decorative shapes)
+- [ ] 🔴 All issues found by the subagent have been fixed and re-verified
 
 ### 🔴 Visual Enhancement (frequently skipped — verify carefully)
 
-- [ ] 🔴 Text-heavy slides have been identified and COUNTED (record the total number of candidates)
-- [ ] 🔴 At least 20% of text-heavy candidate slides have been enhanced with visuals (diagrams, charts, code blocks, or images)
+- [ ] 🔴 A PROGRAMMATIC SCAN of ALL slides was run to find candidates (not just Phase 1 tags — check every slide for missing images/charts/tables)
+- [ ] 🔴 Groups of related slides (e.g., tool categories, model types, comparison series) were identified and treated as a group
+- [ ] 🔴 Text-heavy candidate slides have been COUNTED (record the total number)
+- [ ] 🔴 At least 20% of text-heavy candidate slides have been enhanced with visuals (diagrams, charts, code blocks, icons, or images)
 - [ ] 🔴 Each visually enhanced slide has a backup of the original text-only version appended at end
 - [ ] 🔴 Enhanced slides look professional: consistent colors, clean alignment, readable text, polished styling
 - [ ] 🔴 Visual QA: enhanced slides rendered to images and inspected for correct layout and readability
