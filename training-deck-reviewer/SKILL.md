@@ -517,6 +517,22 @@ so the user can access it.
 changes to a copy of the actual .pptx file. The report tells the author what was found; this
 phase actually fixes the deck.
 
+> **⚠️ MANDATORY ENFORCEMENT — READ BEFORE PROCEEDING ⚠️**
+>
+> Phase 8 contains steps that are frequently skipped by mistake. The following two steps are
+> **NON-NEGOTIABLE** and must be completed before saving the final deck:
+>
+> 1. **Step 6 — Visual Enhancement of Text-Heavy Slides**: You MUST identify text-heavy slides
+>    and enhance 20-40% of them with diagrams, charts, code blocks, or images. Do NOT skip this.
+>    If you reach step 7 without having done visual enhancements, STOP and go back to step 6.
+>
+> 2. **Step 8 — Renumber Slide References**: After inserting new slides, ALL slide numbers in
+>    `qa-report.md` AND `anticipated-qa.md` MUST be updated to reflect final positions in the
+>    reviewed deck. Do NOT save the report with original slide numbers. If you reach step 9
+>    without having renumbered, STOP and go back to step 8.
+>
+> **These are not optional polish steps. They are core deliverable requirements.**
+
 ### Step-by-step workflow
 
 1. **Make a working copy** of the original deck:
@@ -556,19 +572,30 @@ phase actually fixes the deck.
    - Add a speaker note: "This slide summarizes all changes made during the QA review. Remove
      before delivery if desired."
 
-6. **Enhance text-heavy slides with visuals** (see Visual Enhancement of Text-Heavy Slides
-   section below for full details):
+6. **🔴 MANDATORY — Enhance text-heavy slides with visuals** (see Visual Enhancement of
+   Text-Heavy Slides section below for full details):
+
+   **DO NOT SKIP THIS STEP.** This is a core deliverable, not optional polish.
+
    - Review the Phase 1 inventory for slides categorized as `content` (bullets/text) that
      have no images, diagrams, charts, or other visual elements — just text and bullets.
-   - For each text-heavy slide, decide what kind of visual would best reinforce the content:
+     Count the total number of text-heavy candidate slides.
+   - Select 20-40% of those candidates for enhancement. Prioritize slides that explain
+     processes, architectures, or comparisons, and slides early in each section.
+   - For each selected slide, decide what kind of visual would best reinforce the content:
      a diagram/flowchart, a comparison chart, a code example with syntax highlighting, or
      a relevant stock/icon image.
-   - Create the enhanced version of the slide using the `add_slide.py` duplicate-and-edit
-     workflow, replacing or supplementing the text-only layout with the chosen visual.
+   - Create the enhanced version of the slide using python-pptx shape additions (rounded
+     rectangles, arrows, connectors) or the `add_slide.py` duplicate-and-edit workflow.
    - Before modifying, duplicate the original slide and append it at the end as a backup
      (same as any other modified slide).
    - Add a speaker note documenting the visual enhancement.
-   - Render the enhanced slide to an image and verify it looks professional and readable.
+   - Render EVERY enhanced slide to an image and verify it looks professional and readable.
+   - Record each enhancement in the "Changes Applied > Visual Enhancements" table in the
+     QA report.
+
+   **Self-check:** Before proceeding to step 7, confirm you have enhanced at least 20% of
+   text-heavy slides. If you haven't, go back and do it now.
 
 7. **Verify the modified deck**:
    - Re-extract text from the modified deck and confirm changes were applied
@@ -576,12 +603,16 @@ phase actually fixes the deck.
      visually enhanced slides + backup slides)
    - Open a few modified slides to verify formatting wasn't broken
 
-8. **Renumber slide references in the QA report**:
+8. **🔴 MANDATORY — Renumber slide references in the QA report and anticipated Q&A**:
+
+   **DO NOT SKIP THIS STEP.** The report is unusable if slide numbers don't match the
+   reviewed deck. This must be done BEFORE saving the final deliverables.
 
    After adding the Change Summary slide (slide 2), gap-fill slides, visually enhanced
    slides, and backup slides, the original slide numbers in the QA report no longer match
-   actual positions in the reviewed deck. Every slide reference in `qa-report.md` must be
-   updated to reflect the **final** slide positions in `<deck>_reviewed.pptx`.
+   actual positions in the reviewed deck. Every slide reference in BOTH `qa-report.md` AND
+   `anticipated-qa.md` must be updated to reflect the **final** slide positions in
+   `<deck>_reviewed.pptx`.
 
    **How to build the mapping:**
 
@@ -616,6 +647,15 @@ phase actually fixes the deck.
    regex-based replacement across the report file. Replace in descending order of slide
    number (largest first) to avoid double-replacement issues (e.g., replacing "1" inside
    "15").
+
+**🛑 STOP AND VERIFY before saving.** Before proceeding to step 9, confirm ALL of the
+   following. If any answer is NO, go back and fix it:
+
+   - Did you enhance 20-40% of text-heavy slides with visuals in step 6? (Count them.)
+   - Did you renumber ALL slide references in `qa-report.md` in step 8?
+   - Did you renumber ALL slide range references in `anticipated-qa.md` section headers?
+   - Does the report contain a note that slide numbers refer to the reviewed deck?
+   - Does the "Changes Applied" section include a Visual Enhancements table?
 
 9. **Save the final deck** to the outputs folder:
    ```bash
@@ -1186,34 +1226,54 @@ available:
 
 ## Final Checklist — DO NOT SKIP
 
-Before telling the user you're done, verify ALL of these are true:
+Before telling the user you're done, verify ALL of these are true. Items marked 🔴 are
+historically the most frequently skipped — pay extra attention to them.
+
+### Core Deliverables
 
 - [ ] `qa-report.md` has been saved to the outputs folder
 - [ ] `<deck>_reviewed.pptx` has been saved to the outputs folder (modified deck with fixes applied)
+- [ ] `anticipated-qa.md` has been generated with 25-40 questions covering all major sections
+
+### Deck Modifications
+
 - [ ] All auto-fix changes (typos, formatting, years) have been applied to the .pptx file
 - [ ] New slides have been created for each technology gap identified in Phase 5
 - [ ] New slides use the CORRECT slide master (verified via duplicate-and-edit workflow)
 - [ ] New slides include visual design elements (cards, boxes, diagrams), not just text
 - [ ] New slides use full slide width (no large empty areas on one side)
-- [ ] Text-heavy slides have been reviewed and 20-40% enhanced with visuals (diagrams, charts, code blocks, or images)
-- [ ] Each visually enhanced slide has a backup of the original text-only version appended at end
-- [ ] Enhanced slides look professional: consistent colors, clean alignment, readable text, polished styling
 - [ ] A Change Summary slide has been inserted as slide 2 listing all modifications
 - [ ] Every modified slide has a speaker note documenting the change
 - [ ] Every modified slide has a backup copy appended at the end of the deck
 - [ ] Stale year references in footers/title slide have been updated to the current year
 - [ ] The modified deck has been verified (text re-extracted, slide count confirmed)
-- [ ] Visual QA: new and enhanced slides rendered to images and inspected for correct background, layout, and readability
-- [ ] All slide numbers in `qa-report.md` have been renumbered to match final positions in the reviewed deck
-- [ ] All slide numbers in `anticipated-qa.md` section headers have been renumbered to match final positions
-- [ ] The report includes a note that slide numbers refer to the reviewed deck, not the original
-- [ ] The `qa-report.md` includes a "Changes Applied" section documenting all Phase 8 modifications (including visual enhancements)
-- [ ] `anticipated-qa.md` has been generated with 25-40 questions covering all major sections
+
+### 🔴 Visual Enhancement (frequently skipped — verify carefully)
+
+- [ ] 🔴 Text-heavy slides have been identified and COUNTED (record the total number of candidates)
+- [ ] 🔴 At least 20% of text-heavy candidate slides have been enhanced with visuals (diagrams, charts, code blocks, or images)
+- [ ] 🔴 Each visually enhanced slide has a backup of the original text-only version appended at end
+- [ ] 🔴 Enhanced slides look professional: consistent colors, clean alignment, readable text, polished styling
+- [ ] 🔴 Visual QA: enhanced slides rendered to images and inspected for correct layout and readability
+- [ ] 🔴 The `qa-report.md` "Changes Applied" section includes a Visual Enhancements table listing every enhancement
+
+### 🔴 Slide Number Renumbering (frequently skipped — verify carefully)
+
+- [ ] 🔴 A slide number mapping has been built (original → new positions after all insertions)
+- [ ] 🔴 ALL slide numbers in `qa-report.md` have been renumbered to match final positions in the reviewed deck
+- [ ] 🔴 ALL slide numbers in `anticipated-qa.md` section headers have been renumbered to match final positions
+- [ ] 🔴 The report includes a note at the top that slide numbers refer to the reviewed deck, not the original
+- [ ] 🔴 Spot-check: pick 3 random slide references in the report and verify they point to the correct slide in the reviewed deck
+
+### Report Completeness
+
+- [ ] The `qa-report.md` includes a "Changes Applied" section documenting ALL Phase 8 modifications
 - [ ] Q&A includes questions about new slides added in Phase 8
 - [ ] Timing estimate has been calculated and included in the report
 - [ ] If estimated time exceeds allocated time, trimming suggestions have been provided (no changes made)
 
-**If any checkbox above is not checked, you are not done. Go back and complete the missing steps.**
+**If any checkbox above is not checked, you are not done. Go back and complete the missing steps.
+The 🔴 items in particular MUST be verified — they represent the most common failure modes.**
 
 The report without the modified deck is like a code review without the code changes — useful
 analysis, but the author still has to do all the work. The whole value of this skill is that
