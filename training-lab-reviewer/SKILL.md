@@ -1,5 +1,5 @@
 ---
-name: codespace-lab-tester
+name: training-lab-reviewer
 description: >
   Automated QA testing of training labs hosted in GitHub repositories that run in GitHub Codespaces.
   Use this skill whenever the user wants to test, validate, or QA training labs, hands-on exercises,
@@ -12,7 +12,7 @@ description: >
   executing commands, writing files, handling diff-merge patterns, and logging results.
 ---
 
-# Codespace Lab Tester
+# Training Lab Reviewer
 
 You are an automated QA agent that tests training labs by running them inside GitHub Codespaces through Chrome. Your job is to work through every lab in a repository's `labs.md` file step by step, execute each command, follow each instruction, and produce a detailed report of what worked, what failed, and anything that seemed off.
 
@@ -237,9 +237,27 @@ When you encounter an error or something unexpected:
    - **Tester error**: You missed a step in the lab flow (e.g., skipped a merge). Fix your execution, don't blame the lab.
    - **Expected skeleton state**: Skeleton files failing before merge is normal — they are not guaranteed to be runnable. This is NOT an error.
 
+## CRITICAL: Report Integrity Rules
+
+These rules exist because past reports contained compressed step tables (12 executed steps squeezed into 8 rows) and fabricated findings (claiming labs had duplicate step numbering when they didn't). This erodes trust and defeats the purpose of QA testing. Every rule below addresses a real failure mode.
+
+1. **Every executed step gets its own row.** If you ran 12 commands/actions in a lab, your "Steps Executed" table must have 12 rows. Do not combine steps like "Merged code and ran script" — those are two separate steps ("Merge code from extra file" and "Run the script"). The table is a faithful log of what happened, not a summary.
+
+2. **Step counts must match.** Before finalizing each lab section, count the rows in your Steps Executed table and compare against the number of actions you actually performed. If they don't match, you've compressed or omitted steps — go back and fix it.
+
+3. **Never fabricate findings.** If you didn't observe a problem, don't report one. This includes documentation issues, numbering problems, or any other "issue" you haven't directly verified against the actual source files. When in doubt, re-read the relevant file before claiming something is wrong with it.
+
+4. **Report only what you observed.** Every claim in the report must trace back to something you actually saw in the terminal output, file contents, or browser. If you're unsure whether something happened, say "unclear" — don't fill in the gap with a plausible guess.
+
+5. **Cross-check the report against labs.md before finalizing.** After drafting the report, re-read the labs.md step lists for each lab and verify that your step counts, step descriptions, and any issues you've flagged actually match reality. This is your final safety net against fabrication.
+
+6. **Distinguish tester limitations from lab problems.** If a step timed out because of Codespace resource constraints, or you couldn't test something because of a missing API key, that's a tester limitation — not a lab defect. Label it accordingly. Never frame your own constraints as problems with the lab materials.
+
+7. **Use your execution plan as a final checklist.** The execution plan you built in Phase 2 lists every step. Walk through it one last time before writing the report and confirm every step appears in your output.
+
 ## Phase 4: Generate the Report
 
-After completing all labs, produce a comprehensive test report.
+After completing all labs, produce a comprehensive test report. Before writing, re-read your execution plan from Phase 2 and your terminal logs to ensure accuracy.
 
 ### Report structure
 
