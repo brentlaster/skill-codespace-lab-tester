@@ -172,6 +172,12 @@ The script handles complex OOXML-level work:
 - Handles BOTH `a:xfrm` (regular shapes) AND `p:xfrm` (graphicFrames like charts) — **this is critical**: charts use `p:xfrm`, and failing to scale them leaves chart graphics tiny
 - Also scales group shape child offsets/extents (`a:chOff`, `a:chExt`)
 
+### Font Size Scaling
+- When slide dimensions change, font sizes must also be scaled or text appears too small on the larger canvas
+- Scales ALL `sz=` attributes in `a:rPr` (run properties) and `a:defRPr` (default run properties)
+- Uses the average of x and y scale factors (font sizes are isotropic — not direction-dependent)
+- Rounds to nearest 25 (quarter-point) to avoid fractional font size artifacts
+
 ### Overflow Clamping (Uniform Compression)
 - After scaling, some slides may have shapes extending beyond the slide boundary
 - Uses a **uniform compression strategy**: finds the maximum overflow across ALL shapes, then compresses all positions and sizes proportionally
@@ -234,6 +240,8 @@ These are hard-won lessons from iterative testing. Keep them in mind if modifyin
 9. **Work directory permissions**: When the output directory is on a mounted/shared filesystem, `shutil.rmtree` may fail with permission errors. Use `tempfile.gettempdir()` for intermediate work directories.
 
 10. **Script content preservation**: Bookend slides (title/opening, closing) often contain substantial speech content. The script updater must preserve the BODY text from these sections, not replace them with stubs.
+
+11. **Font sizes must scale with slide dimensions**: When slide dimensions change (e.g., 10"→13.33" wide), shape positions and sizes get scaled but font sizes are left untouched by default. This makes text appear too small on the larger canvas. All `sz=` attributes in `a:rPr` and `a:defRPr` must be scaled by the same factor as the slide dimensions.
 
 ## Handling Edge Cases
 
